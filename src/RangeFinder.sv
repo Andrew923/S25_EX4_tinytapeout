@@ -28,24 +28,6 @@ module RangeFinder
     end
   end
 
-  // Tracking max/min
-  always_comb begin
-    case (cs)
-      READY: begin
-        curr_max = '0;
-        curr_min = '1;
-      end
-      BAD: begin
-        curr_max = '0;
-        curr_min = '1;
-      end
-      READ: begin
-        if (data_in > curr_max) curr_max = data_in;
-        if (data_in < curr_min) curr_min = data_in;
-      end
-    endcase
-  end
-
   // Output logic
   always_comb begin
     debug_error = 1'b0;
@@ -53,12 +35,20 @@ module RangeFinder
     range = curr_max - curr_min;
   end
 
-
   // FF for state
-  always_ff @(posedge clock, posedge reset)
-    if (reset)
+  always_ff @(posedge clock, posedge reset) begin
+    if (reset) begin
       cs <= READY;
-    else
+      curr_max <= '0;
+      curr_max <= '1;
+    end else begin
       cs <= ns;
+      // Tracking max/min
+      if (cs == READ) begin
+        if (data_in > curr_max) curr_max <= data_in;
+        if (data_in < curr_min) curr_min <= data_in;
+      end
+    end
+  end
 
 endmodule: RangeFinder
